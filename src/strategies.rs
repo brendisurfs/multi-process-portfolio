@@ -57,10 +57,14 @@ impl SignalGenerator for Rsi {
             tracing::warn!("Empty candles");
             return None;
         }
+
         match ctx.position.size {
             _ => {
                 tracing::trace!("Has position");
-                let first_candle = ctx.market_data.candles.front().expect("front candle");
+                let Some(first_candle) = ctx.market_data.candles.front() else {
+                    return None;
+                };
+
                 if ctx.position.price > first_candle.close {
                     return Some(TradeSignal::Close);
                 }
