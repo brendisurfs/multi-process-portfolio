@@ -153,36 +153,33 @@ pub struct TradingEngine {
 }
 
 impl TradingEngine {
-    pub fn start(&mut self) -> TradingEngineHandle {
+    pub fn start(&mut self) -> anyhow::Result<TradingEngineHandle> {
         let traders = std::mem::take(&mut self.traders);
 
         // handles to send market data.
         let mut traders_map = HashMap::with_capacity(traders.len());
-
         let (stop_tx, stop_rx) = flume::bounded::<bool>(1);
 
-        let tp = rayon::ThreadPoolBuilder::new()
-            .num_threads(2)
-            .build()
-            .expect("failed to build tp");
+        let thread_pool = rayon::ThreadPoolBuilder::new().num_threads(2).build()?;
 
         for trader in traders {
             let exit_recv = stop_rx.clone();
             let asset = trader.market_pair.asset.clone();
             let (market_event_send, market_event_recv) = flume::bounded::<MarketEvent>(512);
 
-            tp.spawn(move || {
+            thread_pool.spawn(move || {
                 trader.start(TraderConfig {
                     exit_recv,
                     market_event_recv,
                 });
             });
+
             tracing::trace!("Inserting handles into stores");
             traders_map.insert(asset, market_event_send);
         }
 
-        TradingEngineHandle {
+        Ok(TradingEngineHandle {
             traders: traders_map,
-        }
+        })
     }
 }

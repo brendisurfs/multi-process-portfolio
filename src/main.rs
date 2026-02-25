@@ -60,7 +60,7 @@ enum Command {
     AddPortfolioPosition(Position),
 }
 
-fn main() {
+fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt()
         .with_max_level(Level::TRACE)
         .with_line_number(true)
@@ -70,80 +70,64 @@ fn main() {
     let sui_market = MarketPair::new("SUI", "USD");
     let sol_market = MarketPair::new("SOL", "USD");
     let btc_market = MarketPair::new("BTC", "USD");
-    let nq_market = MarketPair::new("NQ", "");
 
     // we store our markets to use in the market data generator.
-    let markets = [
-        sui_market.clone(),
-        sol_market.clone(),
-        btc_market.clone(),
-        nq_market.clone(),
-    ];
+    let markets = [sui_market.clone(), sol_market.clone(), btc_market.clone()];
 
     let (cmd_tx, cmd_rx) = flume::bounded::<Command>(128);
     let (order_tx, order_rx) = flume::bounded::<OrderEvent>(128);
     let (market_event_tx, market_event_rx) = flume::bounded::<MarketEvent>(128);
 
-    let portfolio = Arc::new(Mutex::new(
-        Portfolio::builder()
-            .engine_id(engine_id)
-            .positions(HashMap::new())
-            .markets(vec![sui_market.clone(), sol_market.clone()])
-            .build(),
-    ));
+    let base_portfolio_build = Portfolio::builder()
+        .engine_id(engine_id)
+        .positions(HashMap::new())
+        .markets(vec![sui_market.clone(), sol_market.clone()])
+        .build();
+
+    let portfolio = Arc::new(Mutex::new(base_portfolio_build));
 
     let sui_trader = Trader::builder()
         .engine_id(engine_id)
         .market_pair(sui_market)
-        .market_data(MarketData::new())
         .command_recv(cmd_rx.clone())
-        .portfolio(Arc::clone(&portfolio))
         .order_sender(order_tx.clone())
-        .strategy(Box::new(Rsi { period: 14 }))
+        .market_data(MarketData::new())
         .tick_rate(Duration::from_secs(5))
+        .portfolio(Arc::clone(&portfolio))
+        .strategy(Box::new(Rsi { period: 14 }))
         .build();
 
     let btc_trader = Trader::builder()
         .engine_id(engine_id)
         .market_pair(btc_market)
-        .market_data(MarketData::new())
         .command_recv(cmd_rx.clone())
-        .portfolio(Arc::clone(&portfolio))
         .order_sender(order_tx.clone())
-        .strategy(Box::new(Rsi { period: 14 }))
+        .market_data(MarketData::new())
+        .portfolio(Arc::clone(&portfolio))
         .tick_rate(Duration::from_secs(15))
-        .build();
-
-    let nq_trader = Trader::builder()
-        .engine_id(engine_id)
-        .market_pair(nq_market)
-        .market_data(MarketData::new())
-        .command_recv(cmd_rx.clone())
-        .portfolio(Arc::clone(&portfolio))
-        .order_sender(order_tx.clone())
-        .strategy(Box::new(SimpleStrat {}))
-        .tick_rate(Duration::from_secs(30))
+        .strategy(Box::new(Rsi { period: 14 }))
         .build();
 
     let sol_trader = Trader::builder()
         .engine_id(engine_id)
         .market_pair(sol_market)
-        .market_data(MarketData::new())
         .command_recv(cmd_rx.clone())
-        .portfolio(Arc::clone(&portfolio))
-        .strategy(Box::new(SimpleStrat {}))
         .order_sender(order_tx.clone())
+        .market_data(MarketData::new())
+        .portfolio(Arc::clone(&portfolio))
         .tick_rate(Duration::from_secs(2))
+        .strategy(Box::new(SimpleStrat {}))
         .build();
 
-    let traders = vec![sui_trader, sol_trader, btc_trader, nq_trader];
+    let traders = vec![sui_trader, sol_trader, btc_trader];
 
     let trading_engine_handle = TradingEngine::builder()
         .engine_id(engine_id)
         .traders(traders)
         .build()
-        .start();
+        .start()?;
 
+    // Start our order engine which processes incoming orders from signals.
     OrderEngine::default().start(order_rx);
 
     // imitation market data generator.
@@ -178,5 +162,7 @@ fn main() {
             }
         }
     });
+
     std::thread::park();
+    Ok(())
 }
