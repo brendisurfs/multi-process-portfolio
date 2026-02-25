@@ -128,7 +128,7 @@ fn main() -> anyhow::Result<()> {
         .start()?;
 
     // Start our order engine which processes incoming orders from signals.
-    OrderEngine::default().start(order_rx);
+    OrderEngine.start(order_rx);
 
     // imitation market data generator.
     std::thread::spawn(move || {

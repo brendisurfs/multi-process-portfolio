@@ -16,7 +16,6 @@ pub enum OrderEvent {
     Close(MarketPair, Arc<Mutex<Portfolio>>),
 }
 
-#[derive(Default)]
 pub struct OrderEngine;
 
 impl OrderEngine {
