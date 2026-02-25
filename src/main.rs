@@ -157,6 +157,7 @@ fn main() {
                 tracing::warn!("no chosen");
                 continue;
             };
+
             let open: f32 = price_generator.gen_range(10.0..=20.0);
             let high: f32 = price_generator.gen_range(10.0..=20.0);
             let low: f32 = price_generator.gen_range(10.0..=20.0);
@@ -173,7 +174,7 @@ fn main() {
                         volume,
                         timestamp,
                     }))
-                    .inspect_err(|why| tracing::error!("{why}"));
+                    .inspect_err(|why| tracing::error!("Failed to send market event: {why}"));
             }
         }
     });

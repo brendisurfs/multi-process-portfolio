@@ -8,7 +8,7 @@ use std::{
 use bon::Builder;
 use crossbeam::channel::tick;
 use parking_lot::Mutex;
-use tracing::instrument;
+use tracing::{instrument, warn};
 use uuid::Uuid;
 
 use crate::{
@@ -42,6 +42,9 @@ impl MarketData {
     }
 }
 
+/// # Trader
+/// A trader handles trades for a given market pair, acting on that market only.
+/// It can receive commands and send out orders via flume channels.
 #[derive(Builder)]
 pub struct Trader {
     pub engine_id: Uuid,
@@ -93,16 +96,18 @@ impl Trader {
 
             if ticker.try_recv().is_ok() {
                 let ptf = self.portfolio.lock();
-                let position = ptf.positions.get(&self.market_pair).unwrap_or(&Position {
-                    price: 0.0,
-                    size: 0,
-                });
+
+                let Some(position) = ptf.positions.get(&self.market_pair) else {
+                    warn!("No position found for {:?}", self.market_pair);
+                    continue;
+                };
 
                 let ctx = SystemCtx {
                     position: position.clone(),
                     market_pair: self.market_pair.clone(),
                     market_data: self.market_data.clone(),
                 };
+
                 drop(ptf);
 
                 if let Some(signal) = self.strategy.generate_signal(ctx) {
