@@ -139,9 +139,10 @@ fn main() -> anyhow::Result<()> {
         let mut price_generator = rand::thread_rng();
 
         tracing::info!("Starting market data generator");
+
         while tick.recv().is_ok() {
             let Some(market_target) = markets.choose(&mut price_generator) else {
-                tracing::warn!("no chosen");
+                tracing::warn!("no market chosen for price generator");
                 continue;
             };
 

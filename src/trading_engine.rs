@@ -32,9 +32,10 @@ impl TradingEngine {
         let mut traders_map = HashMap::with_capacity(traders.len());
         let (stop_tx, stop_rx) = flume::bounded::<bool>(1);
 
-        let thread_pool = rayon::ThreadPoolBuilder::new()
-            .num_threads(traders.len())
-            .build()?;
+        // NOTE: Max 2 threads for demo purposes, however in a production system
+        // this would be the max threads we can possibly have, as we would be trading
+        // thousands of symbols.
+        let thread_pool = rayon::ThreadPoolBuilder::new().num_threads(2).build()?;
 
         for trader in traders {
             let exit_recv = stop_rx.clone();

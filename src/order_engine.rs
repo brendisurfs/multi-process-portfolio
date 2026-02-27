@@ -46,7 +46,7 @@ impl OrderEngine {
                             info!(pair = market_pair.asset, "Spawning new SHORT handler");
                             // spawn a new task to handle selling and logic.
                             tokio::spawn(async move {
-                                // Simulate the broker interaction.
+                                // Simulate the broker fill interaction.
                                 tokio::time::sleep(Duration::from_millis(300)).await;
 
                                 let mut price_generator = rand::thread_rng();
