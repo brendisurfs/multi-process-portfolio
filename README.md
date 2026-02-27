@@ -37,13 +37,13 @@ This codebase demonstrates the architecture we built to keep those steps within 
 │                  │   │  │  RSI / 15s  │  │   │                      │
 │                  │   │  └─────────────┘  │   │                      │
 └────────┬─────────┘   └────────┬──────────┘   └──────────┬───────────┘
-         │                      │                          │
-         │ flume::bounded(512)  │ flume::bounded(128)      │
-         │ per-asset channel    └─────────── OrderEvent ──►│
-         │                                                  │
-         │  TradingEngineHandle                             │
-         │  HashMap<asset, Sender<MarketEvent>>             │
-         └──────────────── MarketEvent ────────────────────►(each trader)
+         │                      │                         │
+         │ flume::bounded(512)  │ flume::bounded(128)     │
+         │ per-asset channel    └────────── OrderEvent ──►│
+         │                                                │
+         │  TradingEngineHandle                           │
+         │  HashMap<asset, Sender<MarketEvent>>           │
+         └──────────────── MarketEvent ──────────────────►(each trader)
 
                      Arc<Mutex<Portfolio>>
               shared across all traders and order engine
