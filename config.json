@@ -1,19 +1,19 @@
 [
-    {
-        "asset": "BTC",
-        "base": "USD",
-        "strategy": {
-            "name": "simple"
-        }
-    },
-    {
-        "asset": "COIN",
-        "base": "USD",
-        "strategy": {
-            "name": "rsi",
-            "options": {
-                "interval": 14
-            }
-        }
+  {
+    "asset": "BTC",
+    "base": "USD",
+    "strategy": {
+      "name": "simple"
     }
+  },
+  {
+    "asset": "COIN",
+    "base": "USD",
+    "strategy": {
+      "name": "rsi",
+      "options": {
+        "interval": 14
+      }
+    }
+  }
 ]
