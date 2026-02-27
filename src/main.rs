@@ -95,7 +95,7 @@ fn main() -> anyhow::Result<()> {
         .command_recv(cmd_rx.clone())
         .order_sender(order_tx.clone())
         .market_data(MarketData::new())
-        .tick_rate(Duration::from_secs(5))
+        .tick_rate(Duration::from_secs(2))
         .portfolio(Arc::clone(&portfolio))
         .strategy(Box::new(Rsi { period: 14 }))
         .build();
@@ -107,7 +107,7 @@ fn main() -> anyhow::Result<()> {
         .order_sender(order_tx.clone())
         .market_data(MarketData::new())
         .portfolio(Arc::clone(&portfolio))
-        .tick_rate(Duration::from_secs(15))
+        .tick_rate(Duration::from_secs(10))
         .strategy(Box::new(Rsi { period: 14 }))
         .build();
 
@@ -118,7 +118,7 @@ fn main() -> anyhow::Result<()> {
         .order_sender(order_tx.clone())
         .market_data(MarketData::new())
         .portfolio(Arc::clone(&portfolio))
-        .tick_rate(Duration::from_secs(2))
+        .tick_rate(Duration::from_secs(1))
         .strategy(Box::new(SimpleStrat {}))
         .build();
 
@@ -135,7 +135,7 @@ fn main() -> anyhow::Result<()> {
 
     // imitation market data generator.
     std::thread::spawn(move || {
-        let tick = tick(Duration::from_millis(100));
+        let tick = tick(Duration::from_millis(10));
         let mut price_generator = rand::thread_rng();
 
         tracing::info!("Starting market data generator");
@@ -152,16 +152,20 @@ fn main() -> anyhow::Result<()> {
             let close: f32 = price_generator.gen_range(10.0..=20.0);
             let volume: i64 = price_generator.gen_range(1000..=2000);
             let timestamp = OffsetDateTime::now_utc().unix_timestamp();
-            if let Some(trader) = trading_engine_handle.traders.get(&market_target.asset) {
-                trader
-                    .send(MarketEvent::Ohlc(Candle {
-                        open,
-                        high,
-                        low,
-                        close,
-                        volume,
-                        timestamp,
-                    }))
+            if let Some(trade_sender) = trading_engine_handle.traders.get(&market_target.asset) {
+                let ohlc = Candle {
+                    open,
+                    high,
+                    low,
+                    close,
+                    volume,
+                    timestamp,
+                };
+
+                tracing::debug!(symbol = market_target.asset, ohlc = ?ohlc);
+
+                trade_sender
+                    .send(MarketEvent::Ohlc(ohlc))
                     .inspect_err(|why| tracing::error!("Failed to send market event: {why}"));
             }
         }
