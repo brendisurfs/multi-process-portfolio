@@ -5,6 +5,7 @@ mod order_engine;
 mod portfolio;
 mod strategies;
 mod trader;
+mod trading_engine;
 
 use std::{
     collections::{hash_map::Entry, HashMap},

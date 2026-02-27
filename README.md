@@ -46,7 +46,6 @@ Cloning the position and dropping early keeps lock hold time constant and conten
 
 `parking_lot`'s mutex is not poisonable (no unwrap required), and has the `deadlock_detection` feature, enabling us to catch lock ordering bugs during development.
 
-
 ### 5. Direct market data dispatch: O(1), not fan-out
 
 The `TradingEngineHandle` is a `HashMap<String, Sender<MarketEvent>>`. 
