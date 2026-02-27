@@ -26,8 +26,10 @@ use strategies::{Rsi, SimpleStrat};
 use time::{serde::timestamp, OffsetDateTime};
 use tracing::{info, instrument, Level};
 use tracing_subscriber::util::SubscriberInitExt;
-use trader::{Candle, MarketData, Trader, TradingEngine};
+use trader::{Candle, MarketData, Trader};
 use uuid::Uuid;
+
+use crate::trading_engine::TradingEngine;
 
 enum MarketEvent {
     Ohlc(Candle),
