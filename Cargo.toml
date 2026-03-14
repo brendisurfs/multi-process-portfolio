@@ -14,7 +14,7 @@ rayon = "1.10.0"
 serde = { version = "1.0.217", features = ["derive"] }
 serde_json = "1.0.134"
 thiserror = "2.0.18"
-time = { version = "0.3.37", features = ["parsing", "macros", "serde"] }
+time = { version = "0.3.47", features = ["parsing", "macros", "serde"] }
 tokio = { version = "1.42.0", features = ["full"] }
 tracing = "0.1.41"
 tracing-subscriber = "0.3.19"
